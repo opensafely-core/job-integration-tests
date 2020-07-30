@@ -1,0 +1,12 @@
+version: '1.0'
+
+actions:
+  generate_cohort:
+    run: cohortextractor-expectations 1000
+    outputs:
+      cohort: input.csv
+  do_thing:
+    needs: [generate_cohort]
+    run: stata-mp analysis/model.do ${{ needs.generate_cohort.outputs.cohort }}
+    outputs:
+      log: model.log

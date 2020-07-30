@@ -1,0 +1,51 @@
+version: "3.6"
+services:
+  job-server:
+    #build: https://github.com/opensafely/job-server.git
+    build: /home/seb/Code/opensafely/job-server
+    environment:
+      # The job server endpoint
+      - OPENSAFELY_JOB_SERVER_SECRET_KEY=asd
+      # Credentials for acessing the job server
+      - QUEUE_USER=${OPENSAFELY_QUEUE_USER}
+      - QUEUE_PASS=${OPENSAFELY_QUEUE_PASS}
+      - POLL_INTERVAL=0.5
+    ports:
+      - "8000:8000"
+    entrypoint: /bin/bash -c "/app/entrypoint.sh"  #2> /dev/null"
+  job-runner:
+    #build: https://github.com/opensafely/job-runner.git
+    build: /home/seb/Code/opensafely/job-runner
+    environment:
+      # The job server endpoint
+      - JOB_SERVER_ENDPOINT=${OPENSAFELY_JOB_SERVER_ENDPOINT}
+      # The backend requests which we should monitor
+      - BACKEND=${OPENSAFELY_BACKEND}
+      # Credentials for acessing the job server
+      - QUEUE_USER=${OPENSAFELY_QUEUE_USER}
+      - QUEUE_PASS=${OPENSAFELY_QUEUE_PASS}
+      # A location where outputs should be stored
+      - HIGH_PRIVACY_STORAGE_BASE=${OPENSAFELY_HIGH_PRIVACY_STORAGE_BASE}
+      - MEDIUM_PRIVACY_STORAGE_BASE=${OPENSAFELY_MEDIUM_PRIVACY_STORAGE_BASE}
+      # A Github developer access key which can read private repos
+      - PRIVATE_REPO_ACCESS_TOKEN=${OPENSAFELY_PRIVATE_REPO_ACCESS_TOKEN}
+      # Database URLs
+      - FULL_DATABASE_URL=${OPENSAFELY_FULL_DATABASE_URL}
+      - SLICE_DATABASE_URL=${OPENSAFELY_SLICE_DATABASE_URL}
+      - DUMMY_DATABASE_URL=${OPENSAFELY_DUMMY_DATABASE_URL}
+    volumes:
+      - type: bind
+        source: ${OPENSAFELY_MEDIUM_PRIVACY_STORAGE_BASE}
+        target: ${OPENSAFELY_MEDIUM_PRIVACY_STORAGE_BASE}
+      - type: bind
+        source: ${OPENSAFELY_HIGH_PRIVACY_STORAGE_BASE}
+        target: ${OPENSAFELY_HIGH_PRIVACY_STORAGE_BASE}
+      - type: bind
+        source: //var/run/docker.sock
+        target: /var/run/docker.sock
+    restart: on-failure
+    depends_on:
+      - job-server
+    command:
+      - "watch"
+      - ${OPENSAFELY_JOB_SERVER_ENDPOINT}
