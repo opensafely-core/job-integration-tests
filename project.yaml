@@ -1,7 +1,7 @@
 version: '1.0'
 actions:
   generate_cohort:
-    run: cohortextractor:0.5.2 --expectations-population 1000
+    run: cohortextractor:latest --expectations-population 1000
     outputs:
       cohort: input.csv
   do_thing:
