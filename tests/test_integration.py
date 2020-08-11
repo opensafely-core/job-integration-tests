@@ -81,8 +81,7 @@ def test_job_with_dependencies(clear_outputs):
             raise RuntimeError("Test timed out")
         response = requests.get(url).json()
         if response["status_code"] == 0:
-            output_bucket = os.path.join(response["output_bucket"], "model.log")
-            with open(output_bucket, "r") as f:
+            with open(response["outputs"][0]["location"], "r") as f:
                 output = f.read()
                 assert "(16 vars, 1,000 obs)" in output
                 break
