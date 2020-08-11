@@ -3,9 +3,11 @@ actions:
   generate_cohort:
     run: cohortextractor:latest --expectations-population 1000
     outputs:
-      cohort: input.csv
+      highly_sensitive:
+        cohort: input.csv
   do_thing:
     needs: [generate_cohort]
-    run: stata-mp:latest analysis/model.do ${{ needs.generate_cohort.outputs.cohort }}
+    run: stata-mp:latest analysis/model.do ${{ needs.generate_cohort.outputs.highly_sensitive.cohort }}
     outputs:
-      log: model.log
+      moderately_sensitive:
+        log: model.log
