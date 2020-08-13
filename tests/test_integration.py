@@ -6,8 +6,7 @@ import time
 import pytest
 
 
-@pytest.fixture(scope="function")
-def clear_outputs():
+def setup_module():
     required_directories = [
         "OPENSAFELY_HIGH_PRIVACY_STORAGE_BASE",
         "OPENSAFELY_MEDIUM_PRIVACY_STORAGE_BASE",
@@ -46,7 +45,26 @@ def clear_outputs():
         response.raise_for_status()
 
 
-def push_job(operation=None, status=None):
+@pytest.fixture(scope="module")
+def make_workspace():
+    kw = {
+        "name": "my workspace",
+        "branch": "master",
+        "owner": "me",
+        "db": "dummy",
+        "repo": "https://github.com/opensafely/job-integration-tests",
+    }
+
+    response = requests.post(
+        "http://localhost:8000/workspaces/",
+        json=kw,
+        auth=(os.environ["OPENSAFELY_QUEUE_USER"], os.environ["OPENSAFELY_QUEUE_PASS"]),
+    )
+    response.raise_for_status()
+    return response.json()["id"]
+
+
+def push_job(operation=None, status=None, workspace_id=None):
     completed_at = started_at = None
     started = False
     if status is not None:
@@ -56,10 +74,9 @@ def push_job(operation=None, status=None):
     response = requests.post(
         "http://localhost:8000/jobs/",
         json={
-            "repo": "https://github.com/opensafely/job-integration-tests",
             "backend": "tpp",
             "db": "dummy",
-            "tag": "master",
+            "workspace_id": workspace_id,
             "status_code": status,
             "operation": operation,
             "started": started,
@@ -68,13 +85,17 @@ def push_job(operation=None, status=None):
         },
         auth=(os.environ["OPENSAFELY_QUEUE_USER"], os.environ["OPENSAFELY_QUEUE_PASS"]),
     )
-    response.raise_for_status()
+    try:
+        response.raise_for_status()
+    except Exception as error:
+        print(error.response.text)
+        raise
     url = response.json()["url"]
     return url
 
 
-def test_job_with_dependencies(clear_outputs):
-    url = push_job(operation="do_thing")
+def test_job_with_dependencies(make_workspace):
+    url = push_job(operation="do_thing", workspace_id=make_workspace)
     elapsed_seconds = 0
     while True:
         if elapsed_seconds > 30:
@@ -89,9 +110,9 @@ def test_job_with_dependencies(clear_outputs):
         elapsed_seconds += 1
 
 
-def test_job_with_failed_dependencies(clear_outputs):
-    url = push_job(operation="generate_cohort", status=1)
-    url = push_job(operation="do_thing")
+def test_job_with_failed_dependencies(make_workspace):
+    url = push_job(operation="generate_cohort", status=1, workspace_id=make_workspace)
+    url = push_job(operation="do_thing", workspace_id=make_workspace)
     elapsed_seconds = 0
     while True:
         if elapsed_seconds > 30:
