@@ -1,7 +1,7 @@
 version: '1.0'
 actions:
   generate_cohort:
-    run: cohortextractor:latest generate_cohort --output-dir=/workspace --expectations-population 1000
+    run: cohortextractor:latest generate_cohort --output-dir=/workspace
     outputs:
       highly_sensitive:
         cohort: input.csv

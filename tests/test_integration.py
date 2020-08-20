@@ -22,6 +22,7 @@ def setup_module():
                         [
                             "docker-compose",
                             "run",
+                            "--rm",
                             "--entrypoint=",  # unset it
                             "job-runner",
                             "rm",
