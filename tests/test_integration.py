@@ -83,7 +83,7 @@ def push_job(operation=None, status=None, workspace_id=None):
     response = requests.post(
         "http://localhost:8000/jobs/",
         json={
-            "backend": "tpp",
+            "backend": "expectations",
             "db": "dummy",
             "workspace_id": workspace_id,
             "status_code": status,
