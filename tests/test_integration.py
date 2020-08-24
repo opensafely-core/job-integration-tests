@@ -6,7 +6,17 @@ import time
 import pytest
 
 
-def setup_module():
+@pytest.fixture(scope="module")
+def set_env():
+    with open(".env", "r") as f:
+        for k, v in [line.strip().split("=", 1) for line in f.readlines()]:
+            os.environ[k] = v
+
+
+@pytest.fixture(scope="function")
+def clean_up():
+    """Removes files and state left over from previous runs
+    """
     required_directories = [
         "OPENSAFELY_HIGH_PRIVACY_STORAGE_BASE",
         "OPENSAFELY_MEDIUM_PRIVACY_STORAGE_BASE",
@@ -14,7 +24,8 @@ def setup_module():
     with open(".env", "r") as f:
         for k, v in [line.strip().split("=", 1) for line in f.readlines()]:
             if k in required_directories:
-                for f in glob.glob(os.path.join(v, "*")):
+                for f in glob.glob(os.path.join(v, "*/*")):
+                    print(f"deleting {f}")
                     # We use docker to remove files to work around
                     # permissions issues (files created in the docker
                     # container will be owned by root)
@@ -30,9 +41,6 @@ def setup_module():
                             f,
                         ]
                     )
-            elif k == "OPENSAFELY_QUEUE_USER" or k == "OPENSAFELY_QUEUE_PASS":
-
-                os.environ[k] = v
     response = requests.get("http://localhost:8000/jobs/", json={"page_size": 100})
     response.raise_for_status()
     for job in response.json()["results"]:
@@ -95,7 +103,7 @@ def push_job(operation=None, status=None, workspace_id=None):
     return url
 
 
-def test_job_with_dependencies(make_workspace):
+def test_job_with_dependencies(clean_up, set_env, make_workspace):
     url = push_job(operation="do_thing", workspace_id=make_workspace)
     elapsed_seconds = 0
     while True:
@@ -111,7 +119,7 @@ def test_job_with_dependencies(make_workspace):
         elapsed_seconds += 1
 
 
-def test_job_with_failed_dependencies(make_workspace):
+def test_job_with_failed_dependencies(clean_up, set_env, make_workspace):
     url = push_job(operation="generate_cohort", status=1, workspace_id=make_workspace)
     url = push_job(operation="do_thing", workspace_id=make_workspace)
     elapsed_seconds = 0
