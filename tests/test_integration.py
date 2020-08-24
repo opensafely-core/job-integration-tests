@@ -107,7 +107,7 @@ def test_job_with_dependencies(clean_up, set_env, make_workspace):
     url = push_job(operation="do_thing", workspace_id=make_workspace)
     elapsed_seconds = 0
     while True:
-        if elapsed_seconds > 30:
+        if elapsed_seconds > 40:
             raise RuntimeError("Test timed out")
         response = requests.get(url).json()
         if response["status_code"] == 0:
