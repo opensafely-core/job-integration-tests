@@ -73,7 +73,7 @@ def make_workspace():
     return response.json()["id"]
 
 
-def push_job(operation=None, status=None, workspace_id=None):
+def push_job(action_id=None, status=None, workspace_id=None):
     completed_at = started_at = None
     started = False
     if status is not None:
@@ -87,7 +87,7 @@ def push_job(operation=None, status=None, workspace_id=None):
             "db": "dummy",
             "workspace_id": workspace_id,
             "status_code": status,
-            "operation": operation,
+            "action_id": action_id,
             "started": started,
             "completed_at": completed_at,
             "started_at": started_at,
@@ -104,7 +104,7 @@ def push_job(operation=None, status=None, workspace_id=None):
 
 
 def test_job_with_dependencies(clean_up, set_env, make_workspace):
-    url = push_job(operation="do_thing", workspace_id=make_workspace)
+    url = push_job(action_id="do_thing", workspace_id=make_workspace)
     elapsed_seconds = 0
     while True:
         if elapsed_seconds > 40:
@@ -120,8 +120,8 @@ def test_job_with_dependencies(clean_up, set_env, make_workspace):
 
 
 def test_job_with_failed_dependencies(clean_up, set_env, make_workspace):
-    url = push_job(operation="generate_cohort", status=1, workspace_id=make_workspace)
-    url = push_job(operation="do_thing", workspace_id=make_workspace)
+    url = push_job(action_id="generate_cohort", status=1, workspace_id=make_workspace)
+    url = push_job(action_id="do_thing", workspace_id=make_workspace)
     elapsed_seconds = 0
     while True:
         if elapsed_seconds > 30:
