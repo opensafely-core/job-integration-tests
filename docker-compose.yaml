@@ -5,12 +5,7 @@ services:
     build: ../job-server
     command: bash -c "python manage.py loaddata user.json && python manage.py runserver 0.0.0.0:8000"
     environment:
-      # The job server endpoint
       - OPENSAFELY_JOB_SERVER_SECRET_KEY=asd
-      # Credentials for acessing the job server
-      - QUEUE_USER=${OPENSAFELY_QUEUE_USER}
-      - QUEUE_PASS=${OPENSAFELY_QUEUE_PASS}
-      - POLL_INTERVAL=0.5
       # GitHub OAuth credentials
       - SOCIAL_AUTH_GITHUB_KEY=${OPENSAFELY_GITHUB_OAUTH_CLIENT_KEY}
       - SOCIAL_AUTH_GITHUB_SECRET=${OPENSAFELY_GITHUB_OAUTH_CLIENT_SECRET}
@@ -23,8 +18,6 @@ services:
     #build: https://github.com/opensafely/job-runner.git
     build: ../job-runner
     environment:
-      # The job server endpoint
-      - JOB_SERVER_ENDPOINT=${OPENSAFELY_JOB_SERVER_ENDPOINT}
       # The backend requests which we should monitor
       - BACKEND=${OPENSAFELY_BACKEND}
       # Credentials for acessing the job server
