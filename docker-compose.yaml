@@ -2,7 +2,7 @@ version: "3.6"
 services:
   job-server:
     #build: https://github.com/opensafely/job-server.git
-    build: /home/seb/Code/opensafely/job-server
+    build: ../job-server
     command: bash -c "python manage.py loaddata user.json && python manage.py runserver 0.0.0.0:8000"
     environment:
       # The job server endpoint
@@ -20,7 +20,7 @@ services:
       - ./user.json:/app/user.json
   job-runner:
     #build: https://github.com/opensafely/job-runner.git
-    build: /home/seb/Code/opensafely/job-runner
+    build: ../job-runner
     environment:
       # The job server endpoint
       - JOB_SERVER_ENDPOINT=${OPENSAFELY_JOB_SERVER_ENDPOINT}
