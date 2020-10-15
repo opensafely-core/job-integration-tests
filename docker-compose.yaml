@@ -3,7 +3,7 @@ services:
   job-server:
     #build: https://github.com/opensafely/job-server.git
     build: /home/seb/Code/opensafely/job-server
-    command: python manage.py runserver 0.0.0.0:8000
+    command: bash -c "python manage.py loaddata user.json && python manage.py runserver 0.0.0.0:8000"
     environment:
       # The job server endpoint
       - OPENSAFELY_JOB_SERVER_SECRET_KEY=asd
@@ -16,6 +16,8 @@ services:
       - SOCIAL_AUTH_GITHUB_SECRET=${OPENSAFELY_GITHUB_OAUTH_CLIENT_SECRET}
     ports:
       - "8000:8000"
+    volumes:
+      - ./user.json:/app/user.json
   job-runner:
     #build: https://github.com/opensafely/job-runner.git
     build: /home/seb/Code/opensafely/job-runner
