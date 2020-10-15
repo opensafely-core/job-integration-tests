@@ -10,6 +10,9 @@ services:
       - QUEUE_USER=${OPENSAFELY_QUEUE_USER}
       - QUEUE_PASS=${OPENSAFELY_QUEUE_PASS}
       - POLL_INTERVAL=0.5
+      # GitHub OAuth credentials
+      - SOCIAL_AUTH_GITHUB_KEY=${OPENSAFELY_GITHUB_OAUTH_CLIENT_KEY}
+      - SOCIAL_AUTH_GITHUB_SECRET=${OPENSAFELY_GITHUB_OAUTH_CLIENT_SECRET}
     ports:
       - "8000:8000"
     entrypoint: /bin/bash -c "/app/entrypoint.sh"  #2> /dev/null"
