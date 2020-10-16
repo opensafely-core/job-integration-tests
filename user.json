@@ -1,0 +1,20 @@
+[
+{
+  "model": "jobserver.user",
+  "pk": 1,
+  "fields": {
+    "password": "pbkdf2_sha256$180000$LEm4jWDP1PUJ$ce4no++hvxmP/F6c9fXkfj0QP45FrR6dOIgKXltoJFM=",
+    "last_login": null,
+    "is_superuser": true,
+    "username": "test",
+    "first_name": "",
+    "last_name": "",
+    "email": "text@example.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2020-10-09T15:17:52.759Z",
+    "groups": [],
+    "user_permissions": []
+  }
+}
+]
