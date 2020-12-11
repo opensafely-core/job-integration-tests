@@ -1,28 +1,41 @@
-version: "3.6"
+version: "3.7"
 services:
-  job-server:
+  server:
     #build: https://github.com/opensafely/job-server.git
     build: ../job-server
     command: bash -c "python manage.py loaddata user.json && python manage.py runserver 0.0.0.0:8000"
     environment:
+      - ADMIN_USERS=${ADMIN_USERS}
+      - DEBUG=${DEBUG}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
       - OPENSAFELY_JOB_SERVER_SECRET_KEY=asd
       # GitHub OAuth credentials
-      - SOCIAL_AUTH_GITHUB_KEY=${OPENSAFELY_GITHUB_OAUTH_CLIENT_KEY}
-      - SOCIAL_AUTH_GITHUB_SECRET=${OPENSAFELY_GITHUB_OAUTH_CLIENT_SECRET}
+      - SOCIAL_AUTH_GITHUB_KEY=${GITHUB_OAUTH_CLIENT_KEY}
+      - SOCIAL_AUTH_GITHUB_SECRET=${GITHUB_OAUTH_CLIENT_SECRET}
     ports:
       - "8000:8000"
     volumes:
-      - ./db.sqlite3:/app/db.sqlite3
+      - ./server.sqlite3:/app/db.sqlite3
       - ./user.json:/app/user.json
-  job-runner:
-    #build: https://github.com/opensafely/job-runner.git
-    build: ../job-runner
+
+  run:
+    build: .
+    image: ghcr.io/opensafely/job-runner:latest
+    init: true
+    depends_on:
+      - server
+    restart: unless-stopped
     environment:
+      &run_environment
+      # The job server endpoint
+      - JOB_SERVER_ENDPOINT=http://server:8000/api/v2/
       # The backend requests which we should monitor
       - BACKEND=expectations
       # Credentials for acessing the job server
       - QUEUE_USER=test
       - QUEUE_PASS=test
+      # Working directory (see the volume mounts below)
+      - WORK_DIR=/work_dir
       # A location where outputs should be stored
       - HIGH_PRIVACY_STORAGE_BASE=/tmp/outputs/high_security
       - MEDIUM_PRIVACY_STORAGE_BASE=/tmp/outputs/medium_security
@@ -32,7 +45,14 @@ services:
       - FULL_DATABASE_URL=${OPENSAFELY_FULL_DATABASE_URL}
       - SLICE_DATABASE_URL=${OPENSAFELY_SLICE_DATABASE_URL}
       - DUMMY_DATABASE_URL=${OPENSAFELY_DUMMY_DATABASE_URL}
+      - TEMP_DATABASE_NAME=${OPENSAFELY_TEMP_DATABASE_NAME}
+      # Polling
+      - POLL_INTERVAL=5
+      - JOB_LOOP_INTERVAL=1.0
+      # Parallelism
+      - MAX_WORKERS=1
     volumes:
+      &run_volumes
       - type: bind
         source: /tmp/outputs/medium_security
         target: /tmp/outputs/medium_security
@@ -40,9 +60,23 @@ services:
         source: /tmp/outputs/high_security
         target: /tmp/outputs/high_security
       - type: bind
-        source: /var/run/docker.sock
-        target: /var/run/docker.sock
-    restart: on-failure
+        source: /var/run/docker.sock.raw
+        target: /var/run/docker.sock.raw
+      - type: volume
+        source: job_runner_work_dir
+        target: /work_dir
+    command: python -m jobrunner.run
+
+  sync:
+    image: ghcr.io/opensafely/job-runner:latest
+    init: true
     depends_on:
-      - job-server
-    command: watch http://job-server:8000/api/jobs/
+      - server
+    restart: unless-stopped
+    # Re-use environment and volume config from above
+    environment: *run_environment
+    volumes: *run_volumes
+    command: python -m jobrunner.sync
+
+volumes:
+  job_runner_work_dir:
