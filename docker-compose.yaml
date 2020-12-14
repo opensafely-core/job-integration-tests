@@ -61,7 +61,7 @@ services:
         target: /tmp/outputs/high_security
       - type: bind
         source: /var/run/docker.sock.raw
-        target: /var/run/docker.sock.raw
+        target: /var/run/docker.sock
       - type: volume
         source: job_runner_work_dir
         target: /work_dir
