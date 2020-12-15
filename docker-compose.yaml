@@ -54,10 +54,10 @@ services:
     volumes:
       &run_volumes
       - type: bind
-        source: /tmp/outputs/medium_security
+        source: "${PWD}/outputs/medium_security"
         target: /tmp/outputs/medium_security
       - type: bind
-        source: /tmp/outputs/high_security
+        source: "${PWD}/outputs/high_security"
         target: /tmp/outputs/high_security
       - type: bind
         source: /var/run/docker.sock.raw
